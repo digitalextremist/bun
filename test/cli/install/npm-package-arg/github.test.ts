@@ -1,0 +1,129 @@
+import { npa } from "bun:internal-for-testing";
+import { test, expect } from "bun:test";
+
+test('github basic', () => {
+  const tests = {
+    'user/foo-js': {
+      name: null,
+      type: 'git',
+      saveSpec: 'github:user/foo-js',
+      raw: 'user/foo-js',
+    },
+
+    'user/foo-js#bar/baz': {
+      name: null,
+      type: 'git',
+      saveSpec: 'github:user/foo-js#bar/baz',
+      raw: 'user/foo-js#bar/baz',
+    },
+
+    'user..blerg--/..foo-js# . . . . . some . tags / / /': {
+      name: null,
+      type: 'git',
+      saveSpec: 'github:user..blerg--/..foo-js# . . . . . some . tags / / /',
+      raw: 'user..blerg--/..foo-js# . . . . . some . tags / / /',
+    },
+
+    'user/foo-js#bar/baz/bin': {
+      name: null,
+      type: 'git',
+      raw: 'user/foo-js#bar/baz/bin',
+    },
+
+    'foo@user/foo-js': {
+      name: 'foo',
+      type: 'git',
+      saveSpec: 'github:user/foo-js',
+      raw: 'foo@user/foo-js',
+    },
+
+    'github:user/foo-js': {
+      name: null,
+      type: 'git',
+      saveSpec: 'github:user/foo-js',
+      raw: 'github:user/foo-js',
+    },
+
+    'git+ssh://git@github.com/user/foo#1.2.3': {
+      name: null,
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com/user/foo.git#1.2.3',
+      raw: 'git+ssh://git@github.com/user/foo#1.2.3',
+    },
+
+    'git+ssh://git@github.com:user/foo#1.2.3': {
+      name: null,
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com/user/foo.git#1.2.3',
+      raw: 'git+ssh://git@github.com:user/foo#1.2.3',
+    },
+
+    'git://github.com/user/foo': {
+      name: null,
+      type: 'git',
+      saveSpec: 'git://github.com/user/foo.git',
+      raw: 'git://github.com/user/foo',
+    },
+
+    'https://github.com/user/foo.git': {
+      name: null,
+      type: 'git',
+      saveSpec: 'git+https://github.com/user/foo.git',
+      raw: 'https://github.com/user/foo.git',
+    },
+
+    '@foo/bar@git+ssh://github.com/user/foo': {
+      name: '@foo/bar',
+      scope: '@foo',
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com/user/foo.git',
+      rawSpec: 'git+ssh://github.com/user/foo',
+      raw: '@foo/bar@git+ssh://github.com/user/foo',
+    },
+
+    'foo@bar/foo': {
+      name: 'foo',
+      type: 'git',
+      saveSpec: 'github:bar/foo',
+      raw: 'foo@bar/foo',
+    },
+
+    'git@github.com:12345': {
+      name: undefined,
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com:12345',
+      fetchSpec: 'ssh://git@github.com:12345',
+      raw: 'git@github.com:12345',
+    },
+
+    'git@github.com:12345/': {
+      name: undefined,
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com:12345/',
+      fetchSpec: 'ssh://git@github.com:12345/',
+      raw: 'git@github.com:12345/',
+    },
+
+    'git@github.com:12345/foo': {
+      name: undefined,
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com:12345/foo',
+      fetchSpec: 'ssh://git@github.com:12345/foo',
+      raw: 'git@github.com:12345/foo',
+    },
+
+    'git@github.com:12345foo': {
+      name: undefined,
+      type: 'git',
+      saveSpec: 'git+ssh://git@github.com:12345foo',
+      fetchSpec: 'git@github.com:12345foo',
+      raw: 'git@github.com:12345foo',
+    },
+  };
+
+  Object.keys(tests).forEach((arg) => {
+    const res = npa(arg);
+    expect(res).toBeInstanceOf(npa.Result);
+    expect(res).toMatchObject(tests[arg]);
+  });
+});

@@ -401,6 +401,12 @@ pub fn indexOfSigned(self: string, str: string) i32 {
     return @as(i32, @intCast(i));
 }
 
+/// Returns last index of `char` before position `before`.
+pub fn lastIndexBeforeChar(self: string, char: u8, before: u8) ?usize {
+    const before_pos = indexOfChar(self, before) orelse 0;
+    return lastIndexOfChar(self[0..before_pos], char);
+}
+
 pub fn lastIndexOfChar(self: []const u8, char: u8) callconv(bun.callconv_inline) ?usize {
     if (comptime Environment.isLinux) {
         if (@inComptime()) {

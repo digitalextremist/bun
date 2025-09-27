@@ -22,6 +22,262 @@ const URI = union(Tag) {
     };
 };
 
+/// Resolves Git URLs and metadata.
+pub const HostedGitInfo = struct {
+    pub fn fromUrl(url: string) ?HostedGitInfo {
+    }
+
+    /// Test whether the given node-package-arg string is a GitHub shorthand.
+    ///
+    /// This mirrors the implementation of hosted-git-info, though it is
+    /// significantly faster.
+    fn isGithubShorthand(npa_str: string) bool {
+        // The implementation in hosted-git-info is a multi-pass algorithm.
+        // We've opted to implement a single-pass algorithm for better
+        // performance.
+        //
+        // This could be even faster with SIMD but this is probably good
+        // enough for now.
+
+        if (npa_str.len < 1) {
+            return false;
+        }
+
+        // Implements doesNotStartWithDot
+        if (npa_str[0] == '.' or npa_str[0] == '/') {
+            return false;
+        }
+
+        var pound_idx: ?u32 = null;
+        var seen_slash = false;
+
+        for (npa_str, 0..) |c, i| {
+            switch (c) {
+                // Implement atOnlyAfterHash and colonOnlyAfterHash
+                ':', '@' => {
+                    if (pound_idx == null) {
+                        return false;
+                    }
+                },
+
+                '#' => {
+                    pound_idx = i;
+                },
+                '/' => {
+                    // Implements secondSlashOnlyAfterHash
+                    if (seen_slash and pound_idx == null) {
+                        return false;
+                    }
+
+                    seen_slash = true;
+                },
+                else => {
+                    // Implement spaceOnlyAfterHash
+                    if (std.ascii.isWhitespace(c) and pound_idx == null) {
+                        return false;
+                    }
+                },
+            }
+        }
+
+        // Implements doesNotEndWithSlash
+        const does_not_end_with_slash =
+            if (pound_idx) |pi|
+                npa_str.len > 2 and npa_str[pi - 1] != '/'
+            else
+                npa_str[npa_str.len - 1] != '/';
+
+        // Implement hasSlash
+        return seen_slash and does_not_end_with_slash;
+    }
+
+
+    /// Handles input like git:github.com:user/repo and inserting the // after
+    /// the first : if necessary
+    ///
+    /// Note that this may or may not allocate and you're responsible for
+    /// freeing if so necessary by the return type.
+    fn parseUrl(
+        npa_str: string,
+        allocator: std.mem.Allocator,
+    ) !struct { url: bun.URL, allocated: bool } {
+        const at_index = strings.lastIndexBeforeOf(npa_str, '@', '#');
+
+
+        const first_at_index: ?u32 = strings.indexOfChar(npa_str, '@');
+        const first_colon_index: ?u32 = strings.indexOfChar(npa_str, ':');
+
+        // We have something like git@foo:bar/baz.git or foo:@bar
+        if (first_at_index) |at_idx| {
+            if (first_colon_index) |col_idx| {
+                if (at_idx < col_idx) {
+                    // We have something like git@foo:bar/baz.git which is
+                    // apparently a legal URL. (or so hosted-git-info says)
+                    // TODO(markovejnovic): Vet that this assumption works with
+                    //                      bun.URL.
+                    return .{
+                        .url = bun.URL.parse(npa_str),
+                        .allocated = false,
+                    };
+                }
+
+                // We need to parse the URL of git+ssh://${arg}.
+
+                var buf = try allocator.alloc(npa_str.len + "git+ssh://".len);
+
+                @memcpy(buf, "git+ssh://");
+                @memcpy(buf["git+ssh://".len..], npa_str);
+
+                return .{
+                    .url = bun.URL.parse("git+ssh://" ++ npa_str),
+                    .allocated = true,
+                };
+            }
+        }
+
+        // Now the other option we have is something like https://
+        const first_double_slash_index: ?u32 = strings.indexOf(npa_str, "//");
+        if (first_double_slash_index) |double_slash_index| {
+            if (first_colon_index) |colon_index| {
+                if (colon_index < double_slash_index) {
+                    // We have something like git+ssh://foo/bar.git which is a
+                    // legal URL.
+                    return .{
+                        .url = bun.URL.parse(npa_str),
+                        .allocated = false,
+                    };
+                }
+            }
+        }
+
+        // Now otherwise, what we need to do is return a URL which converts
+        // git:foo to git://foo
+        if (
+    }
+};
+
+pub const NodePackageArg = struct {
+    pub const Type = enum {
+        .git,
+        .tag,
+        .version,
+        .range,
+        .file,
+        .directory,
+        .remote,
+        .alias,
+    };
+
+    name: bun.string,
+    type: Type,
+
+    /// If true this specifier refers to a resource hosted on a registry. This
+    /// is true for tag, version and range types.
+    pub fn isRegistry(this: *const NodePackageArg) bool {
+        return switch (this.type) {
+            .tag, .version, .range => true,
+            else => false,
+        };
+    }
+
+    /// If known, the name field expected in the resulting pkg.
+    pub fn getName(this: *const NodePackageArg) ?String { }
+
+    /// If a name is something like @org/module then the scope field will be
+    /// set to @org. If it doesn't have a scoped name, then scope is null.
+    pub fn scope(this: *const NodePackageArg) ?String { }
+
+    pub fn fromDepStr(npa_str: bun.string) NodePackageArg {
+    }
+
+    fn resolve(
+        name: bun.string,
+        spec_str: bun.string,
+        npa_str: bun.string,
+    ) NodePackageArg {
+        // Care: there's another branch in which we might return a file type.
+        if (isFileSpec(spec_str)) {
+            return fromFile(name, spec_str, npa_str);
+        }
+
+        if (isAliasSpec(spec_str)) {
+            return fromAlias(name, spec_str, npa_str);
+        }
+
+        if (isGitSpec(spec_str)) {
+            return fromGit(name, spec_str, npa_str);
+        }
+
+        if (isUrlSpec(spec_str)) {
+            return fromUrl(name, spec_str, npa_str);
+        }
+
+        // These are now best-guesses.
+        // TODO(markovejnovic): This feels like an odd heuristic but it's what
+        // npm-package-arg does.
+        // Notice how we don't use the isFileSpec function here. This matches
+        // npa.
+        if (hasSlashes(spec_str) or heuristicIsFiletype(spec_str)) {
+            return fromFile(name, spec_str, npa_str);
+        }
+
+        return fromRegistry(name, spec_str, npa_str);
+    }
+
+    fn isFileSpec(spec_str: bun.string) bool {
+        if (strings.hasPrefixCaseInsensitive(spec_str, "file:")) {
+            return true;
+        }
+
+        return if (bun.Environment.isWindows)
+            isWindowsFile(spec_str)
+        else
+            isPosixFile(spec_str);
+    }
+
+    fn isWindowsFile(spec_str: bun.string) bool {
+        // This is the heuristic npm-package-arg uses. You can debate whether
+        // it is good or not, but this is what they use.
+        if (spec_str.len < 1) return false;
+
+        return switch (spec_str[0]) {
+            '.', '/', '\\', => true,
+            '~' => spec_str.len >= 2 and spec_str[1] == '/',
+            'a'...'z', 'A'...'Z' => spec_str.len >= 2 and spec_str[1] == ':',
+            else => false,
+        };
+    }
+
+    fn isPosixFile(spec_str: bun.string) bool {
+        // This is kind of weird but npm-package-arg also supports C: as path
+        // prefixes on POSIX platforms. ¯\_(ツ)_/¯ Maybe there's Sun or
+        // something.
+        if (spec_str.len < 1) return false;
+
+        return switch (spec_str[0]) {
+            '.', '/', => true,
+            '~' => spec_str.len >= 2 and spec_str[1] == '/',
+            'a'...'z', 'A'...'Z' => spec_str.len >= 2 and spec_str[1] == ':',
+            else => false,
+        };
+    }
+
+    fn isAliasSpec(spec_str: bun.string) bool {
+        return spec_str.hasPrefixComptimeCaseInsensitive("npm:");
+    }
+
+    fn isGitSpec(spec_str: bun.string) bool {
+        // npm-package-arg uses hosted-git-info for this, but we put it inline.
+    }
+
+    fn hasSlashes(spec_str: bun.string) bool {
+        return bun.path.hasPathSlashes(spec_str);
+    }
+
+    fn heuristicIsFiletype(spec_str: bun.string) bool {
+    }
+};
+
 name_hash: PackageNameHash = 0,
 name: String = .{},
 version: Dependency.Version = .{},
@@ -1455,6 +1711,7 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const logger = bun.logger;
 const strings = bun.strings;
+const resolve_path = @import("../resolver/resolve_path.zig");
 
 const Semver = bun.Semver;
 const SlicedString = Semver.SlicedString;
