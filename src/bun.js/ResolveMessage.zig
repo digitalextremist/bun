@@ -168,15 +168,16 @@ pub const ResolveMessage = struct {
         referrer: string,
     ) bun.OOM!jsc.JSValue {
         const resolve_error = try allocator.create(ResolveMessage);
+        // Don't clone the msg - the metadata.resolve ranges point to offsets in msg.data.text
+        // Cloning creates a new text buffer but keeps the same ranges, causing use-after-poison
         resolve_error.* = ResolveMessage{
-            .msg = try msg.clone(allocator),
+            .msg = msg,
             .allocator = allocator,
             .referrer = Fs.Path.init(referrer),
         };
 
-        const BunErrorData = @import("./BunErrorData.zig").BunErrorData;
-        const tagged = BunErrorData.from(resolve_error);
-        return ResolveMessage__toJS(@ptrCast(@alignCast(tagged.ptr())), globalThis);
+        // Pass the actual ResolveMessage pointer, the C++ side will create and store the tagged pointer
+        return ResolveMessage__toJS(resolve_error, globalThis);
     }
 
     pub fn toJS(this: *ResolveMessage, globalThis: *JSGlobalObject) jsc.JSValue {

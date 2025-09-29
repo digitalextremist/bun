@@ -39,6 +39,24 @@ pub export fn Bun__getResolveMessage(ptr: ?*anyopaque) ?*ResolveMessage {
     return data.as(ResolveMessage);
 }
 
+/// Create a tagged pointer for a BuildMessage
+pub export fn Bun__createBuildMessageTaggedPointer(build_message: *BuildMessage) *BunErrorData {
+    const data = BunErrorData.from(build_message);
+    // We need to allocate this on the heap to return a stable pointer
+    const ptr = bun.default_allocator.create(BunErrorData) catch bun.outOfMemory();
+    ptr.* = data;
+    return ptr;
+}
+
+/// Create a tagged pointer for a ResolveMessage
+pub export fn Bun__createResolveMessageTaggedPointer(resolve_message: *ResolveMessage) *BunErrorData {
+    const data = BunErrorData.from(resolve_message);
+    // We need to allocate this on the heap to return a stable pointer
+    const ptr = bun.default_allocator.create(BunErrorData) catch bun.outOfMemory();
+    ptr.* = data;
+    return ptr;
+}
+
 /// Finalize the bunErrorData based on its type
 pub export fn Bun__errorInstance__finalize(ptr: ?*anyopaque) void {
     if (ptr == null) return;
@@ -52,4 +70,7 @@ pub export fn Bun__errorInstance__finalize(ptr: ?*anyopaque) void {
         const resolve_message = data.as(ResolveMessage);
         resolve_message.finalize();
     }
+
+    // Free the allocated BunErrorData wrapper
+    bun.default_allocator.destroy(data);
 }

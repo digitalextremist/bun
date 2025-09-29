@@ -48,15 +48,16 @@ pub const BuildMessage = struct {
         // resolve_result: *const Resolver.Result,
     ) bun.OOM!jsc.JSValue {
         const build_error = try allocator.create(BuildMessage);
+        // Don't clone the msg - the metadata ranges point to offsets in msg.data.text
+        // Cloning creates a new text buffer but keeps the same ranges, causing use-after-poison
         build_error.* = BuildMessage{
-            .msg = try msg.clone(allocator),
+            .msg = msg,
             // .resolve_result = resolve_result.*,
             .allocator = allocator,
         };
 
-        const BunErrorData = @import("./BunErrorData.zig").BunErrorData;
-        const tagged = BunErrorData.from(build_error);
-        return BuildMessage__toJS(@ptrCast(@alignCast(tagged.ptr())), globalThis);
+        // Pass the actual BuildMessage pointer, the C++ side will create and store the tagged pointer
+        return BuildMessage__toJS(build_error, globalThis);
     }
 
     pub fn toJS(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {

@@ -217,6 +217,9 @@ JSC::Structure* createBuildMessageStructure(JSC::VM& vm, JSC::JSGlobalObject* gl
     return JSC::ErrorInstance::createStructure(vm, globalObject, prototype);
 }
 
+// Function to create a tagged pointer from a BuildMessage
+extern "C" void* Bun__createBuildMessageTaggedPointer(void* buildMessage);
+
 // Main toJS function called from Zig
 extern "C" JSC::EncodedJSValue BuildMessage__toJS(void* buildMessage, JSC::JSGlobalObject* globalObject)
 {
@@ -233,8 +236,9 @@ extern "C" JSC::EncodedJSValue BuildMessage__toJS(void* buildMessage, JSC::JSGlo
     // Create the ErrorInstance with our custom structure
     JSC::ErrorInstance* errorInstance = JSC::ErrorInstance::create(vm, structure, message, {});
 
-    // Set the bunErrorData to point to our BuildMessage
-    errorInstance->setBunErrorData(buildMessage);
+    // Create tagged pointer and set it as bunErrorData
+    void* taggedPointer = Bun__createBuildMessageTaggedPointer(buildMessage);
+    errorInstance->setBunErrorData(taggedPointer);
 
     return JSC::JSValue::encode(errorInstance);
 }

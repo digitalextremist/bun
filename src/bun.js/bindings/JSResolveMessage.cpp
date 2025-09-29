@@ -265,6 +265,9 @@ JSC::Structure* createResolveMessageStructure(JSC::VM& vm, JSC::JSGlobalObject* 
 // Note: Bun__errorInstance__finalize is implemented in ZigGlobalObject.cpp
 // to handle both ResolveMessage and BuildMessage with proper TaggedPointerUnion checking
 
+// Function to create a tagged pointer from a ResolveMessage
+extern "C" void* Bun__createResolveMessageTaggedPointer(void* resolveMessage);
+
 // Main toJS function called from Zig
 extern "C" JSC::EncodedJSValue ResolveMessage__toJS(void* resolveMessage, JSC::JSGlobalObject* globalObject)
 {
@@ -281,8 +284,9 @@ extern "C" JSC::EncodedJSValue ResolveMessage__toJS(void* resolveMessage, JSC::J
     // Create the ErrorInstance with our custom structure
     JSC::ErrorInstance* errorInstance = JSC::ErrorInstance::create(vm, structure, message, {});
 
-    // Set the bunErrorData to point to our ResolveMessage
-    errorInstance->setBunErrorData(resolveMessage);
+    // Create tagged pointer and set it as bunErrorData
+    void* taggedPointer = Bun__createResolveMessageTaggedPointer(resolveMessage);
+    errorInstance->setBunErrorData(taggedPointer);
 
     return JSC::JSValue::encode(errorInstance);
 }
