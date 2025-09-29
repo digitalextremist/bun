@@ -399,5 +399,5 @@ TC39 Stage 4 proposal for high-precision floating-point summation:
 ```ts
 Math.sumPrecise([0.1, 0.2, 0.3, -0.5, 0.1]); // => 0.2
 // Regular addition would lose precision
-(0.1 + 0.2 + 0.3 - 0.5 + 0.1); // => 0.20000000000000007
+0.1 + 0.2 + 0.3 - 0.5 + 0.1; // => 0.20000000000000007
 ```
