@@ -1,8 +1,6 @@
 pub const ResolveMessage = struct {
-    pub const js = jsc.Codegen.JSResolveMessage;
-    pub const toJS = js.toJS;
-    pub const fromJS = js.fromJS;
-    pub const fromJSDirect = js.fromJSDirect;
+    // Remove codegen references since we're not using the class generator anymore
+    pub extern fn ResolveMessage__toJS(*ResolveMessage, *jsc.JSGlobalObject) jsc.JSValue;
 
     msg: logger.Msg,
     allocator: std.mem.Allocator,
@@ -169,13 +167,30 @@ pub const ResolveMessage = struct {
         msg: logger.Msg,
         referrer: string,
     ) bun.OOM!jsc.JSValue {
-        var resolve_error = try allocator.create(ResolveMessage);
+        const resolve_error = try allocator.create(ResolveMessage);
         resolve_error.* = ResolveMessage{
             .msg = try msg.clone(allocator),
             .allocator = allocator,
             .referrer = Fs.Path.init(referrer),
         };
-        return resolve_error.toJS(globalThis);
+
+        const BunErrorData = @import("./BunErrorData.zig").BunErrorData;
+        const tagged = BunErrorData.from(resolve_error);
+        return ResolveMessage__toJS(@ptrCast(@alignCast(tagged.ptr())), globalThis);
+    }
+
+    pub fn toJS(this: *ResolveMessage, globalThis: *JSGlobalObject) jsc.JSValue {
+        return ResolveMessage__toJS(this, globalThis);
+    }
+
+    pub fn as(value: jsc.JSValue, globalThis: *JSGlobalObject) ?*ResolveMessage {
+        _ = globalThis;
+        const error_instance = value.as(jsc.ErrorInstance) orelse return null;
+        const bun_error_data = error_instance.bunErrorData() orelse return null;
+
+        const BunErrorData = @import("./BunErrorData.zig").BunErrorData;
+        const tagged = @as(BunErrorData, @ptrCast(@alignCast(bun_error_data)));
+        return tagged.as(ResolveMessage);
     }
 
     pub fn getPosition(
@@ -226,6 +241,59 @@ pub const ResolveMessage = struct {
 
     pub fn finalize(this: *ResolveMessage) callconv(.C) void {
         this.msg.deinit(bun.default_allocator);
+    }
+
+    // Export functions for C++ bindings
+    pub export fn ResolveMessage__getMessage(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getMessage(globalThis);
+    }
+
+    pub export fn ResolveMessage__getCode(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getCode(globalThis);
+    }
+
+    pub export fn ResolveMessage__getLevel(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getLevel(globalThis);
+    }
+
+    pub export fn ResolveMessage__getReferrer(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getReferrer(globalThis);
+    }
+
+    pub export fn ResolveMessage__getSpecifier(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getSpecifier(globalThis);
+    }
+
+    pub export fn ResolveMessage__getImportKind(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getImportKind(globalThis);
+    }
+
+    pub export fn ResolveMessage__getPosition(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getPosition(globalThis);
+    }
+
+    pub export fn ResolveMessage__getLine(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getLine(globalThis);
+    }
+
+    pub export fn ResolveMessage__getColumn(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getColumn(globalThis);
+    }
+
+    pub export fn ResolveMessage__toString(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject, _: *jsc.CallFrame) jsc.JSValue {
+        return this.toStringFn(globalThis);
+    }
+
+    pub export fn ResolveMessage__toJSON(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) jsc.JSValue {
+        return this.toJSON(globalThis, callframe) catch globalThis.throwOutOfMemoryValue();
+    }
+
+    pub export fn ResolveMessage__toPrimitive(this: *ResolveMessage, globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) jsc.JSValue {
+        return this.toPrimitive(globalThis, callframe) catch jsc.JSValue.jsNull();
+    }
+
+    pub export fn ResolveMessage__finalize(this: *ResolveMessage) void {
+        this.finalize();
     }
 };
 

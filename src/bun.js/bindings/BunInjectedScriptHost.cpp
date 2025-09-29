@@ -9,6 +9,7 @@
 #include "JSEventTarget.h"
 #include "JSWorker.h"
 #include <JavaScriptCore/ObjectConstructor.h>
+#include <JavaScriptCore/ErrorInstance.h>
 
 #include "JSFetchHeaders.h"
 #include "JSURLSearchParams.h"
@@ -22,13 +23,25 @@ namespace Bun {
 using namespace JSC;
 using namespace WebCore;
 
+// External functions from BunErrorData.zig
+extern "C" bool Bun__isBuildMessage(void* ptr);
+extern "C" bool Bun__isResolveMessage(void* ptr);
+
 JSValue BunInjectedScriptHost::subtype(JSGlobalObject* exec, JSValue value)
 {
     VM& vm = exec->vm();
 
-    if (
-        value.inherits<JSDOMException>() || value.inherits<JSResolveMessage>() || value.inherits<JSBuildMessage>())
+    // Check for DOMException
+    if (value.inherits<JSDOMException>())
         return jsNontrivialString(vm, "error"_s);
+
+    // Check for ErrorInstance with BuildMessage or ResolveMessage
+    if (auto* errorInstance = jsDynamicCast<ErrorInstance*>(value)) {
+        if (void* bunErrorData = errorInstance->bunErrorData()) {
+            if (Bun__isBuildMessage(bunErrorData) || Bun__isResolveMessage(bunErrorData))
+                return jsNontrivialString(vm, "error"_s);
+        }
+    }
 
     return jsUndefined();
 }

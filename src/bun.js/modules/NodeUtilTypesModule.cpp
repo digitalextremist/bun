@@ -11,11 +11,11 @@
 #include <JavaScriptCore/AsyncFunctionPrototype.h>
 #include <JavaScriptCore/CallFrame.h>
 #include <JavaScriptCore/CallFrameInlines.h>
+#include <JavaScriptCore/ErrorInstance.h>
 #include <JavaScriptCore/ErrorPrototype.h>
 #include <JavaScriptCore/GeneratorFunctionPrototype.h>
 #include <JavaScriptCore/JSArrayBuffer.h>
 #include <JavaScriptCore/ObjectConstructor.h>
-#include "ZigGeneratedClasses.h"
 #include "JSKeyObject.h"
 
 #include "NodeUtilTypesModule.h"
@@ -159,9 +159,11 @@ JSC_DEFINE_HOST_FUNCTION(jsFunctionIsNativeError,
         // Workaround for https://github.com/oven-sh/bun/issues/11780
         // They have code that does
         //      assert(util.types.isNativeError(resolveMessage))
-        // FIXME: delete this once ResolveMessage and BuildMessage extend Error
-        if (cell->inherits<WebCore::JSResolveMessage>() || cell->inherits<WebCore::JSBuildMessage>())
-            return JSValue::encode(jsBoolean(true));
+        // Check if this is an ErrorInstance with BuildMessage or ResolveMessage bunErrorData
+        if (auto* errorInstance = jsDynamicCast<JSC::ErrorInstance*>(value)) {
+            if (errorInstance->bunErrorData())
+                return JSValue::encode(jsBoolean(true));
+        }
     }
 
     return JSValue::encode(jsBoolean(false));

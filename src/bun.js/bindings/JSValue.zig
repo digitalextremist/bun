@@ -53,6 +53,7 @@ pub const JSValue = enum(i64) {
     }
 
     extern fn JSC__JSValue__getDirectIndex(JSValue, *JSGlobalObject, u32) JSValue;
+    extern fn JSC__JSErrorInstance__bunErrorData(JSValue0: JSValue) ?*anyopaque;
     pub fn getDirectIndex(this: JSValue, globalThis: *JSGlobalObject, i: u32) JSValue {
         return JSC__JSValue__getDirectIndex(this, globalThis, i);
     }
@@ -437,6 +438,25 @@ pub const JSValue = enum(i64) {
 
             return ZigType.fromJS(value);
         }
+
+        // Handle BuildMessage and ResolveMessage which are stored as bunErrorData in ErrorInstance
+        if (comptime ZigType == @import("../BuildMessage.zig").BuildMessage) {
+            // Check if it's an ErrorInstance
+            if (!value.isObject()) return null;
+            const ptr = JSC__JSErrorInstance__bunErrorData(value);
+            if (ptr == null) return null;
+            return @import("../BunErrorData.zig").Bun__getBuildMessage(ptr);
+        }
+
+        if (comptime ZigType == @import("../ResolveMessage.zig").ResolveMessage) {
+            // Check if it's an ErrorInstance
+            if (!value.isObject()) return null;
+            const ptr = JSC__JSErrorInstance__bunErrorData(value);
+            if (ptr == null) return null;
+            return @import("../BunErrorData.zig").Bun__getResolveMessage(ptr);
+        }
+
+        return null;
     }
 
     extern fn JSC__JSValue__dateInstanceFromNullTerminatedString(*JSGlobalObject, [*:0]const u8) JSValue;

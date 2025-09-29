@@ -1,8 +1,6 @@
 pub const BuildMessage = struct {
-    pub const js = jsc.Codegen.JSBuildMessage;
-    pub const toJS = js.toJS;
-    pub const fromJS = js.fromJS;
-    pub const fromJSDirect = js.fromJSDirect;
+    // Remove codegen references since we're not using the class generator anymore
+    pub extern fn BuildMessage__toJS(*BuildMessage, *jsc.JSGlobalObject) jsc.JSValue;
 
     msg: logger.Msg,
     // resolve_result: Resolver.Result,
@@ -49,14 +47,30 @@ pub const BuildMessage = struct {
         msg: logger.Msg,
         // resolve_result: *const Resolver.Result,
     ) bun.OOM!jsc.JSValue {
-        var build_error = try allocator.create(BuildMessage);
+        const build_error = try allocator.create(BuildMessage);
         build_error.* = BuildMessage{
             .msg = try msg.clone(allocator),
             // .resolve_result = resolve_result.*,
             .allocator = allocator,
         };
 
-        return build_error.toJS(globalThis);
+        const BunErrorData = @import("./BunErrorData.zig").BunErrorData;
+        const tagged = BunErrorData.from(build_error);
+        return BuildMessage__toJS(@ptrCast(@alignCast(tagged.ptr())), globalThis);
+    }
+
+    pub fn toJS(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return BuildMessage__toJS(this, globalThis);
+    }
+
+    pub fn as(value: jsc.JSValue, globalThis: *jsc.JSGlobalObject) ?*BuildMessage {
+        _ = globalThis;
+        const error_instance = value.as(jsc.ErrorInstance) orelse return null;
+        const bun_error_data = error_instance.bunErrorData() orelse return null;
+
+        const BunErrorData = @import("./BunErrorData.zig").BunErrorData;
+        const tagged = @as(BunErrorData, @ptrCast(@alignCast(bun_error_data)));
+        return tagged.as(BuildMessage);
     }
 
     pub fn toString(
@@ -184,6 +198,47 @@ pub const BuildMessage = struct {
 
     pub fn finalize(this: *BuildMessage) void {
         this.msg.deinit(bun.default_allocator);
+    }
+
+    // Export functions for C++ bindings
+    pub export fn BuildMessage__getMessage(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getMessage(globalThis);
+    }
+
+    pub export fn BuildMessage__getLevel(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getLevel(globalThis);
+    }
+
+    pub export fn BuildMessage__getPosition(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getPosition(globalThis);
+    }
+
+    pub export fn BuildMessage__getNotes(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getNotes(globalThis) catch globalThis.throwOutOfMemoryValue();
+    }
+
+    pub export fn BuildMessage__getLine(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getLine(globalThis);
+    }
+
+    pub export fn BuildMessage__getColumn(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) jsc.JSValue {
+        return this.getColumn(globalThis);
+    }
+
+    pub export fn BuildMessage__toString(this: *BuildMessage, globalThis: *jsc.JSGlobalObject, _: *jsc.CallFrame) jsc.JSValue {
+        return this.toStringFn(globalThis);
+    }
+
+    pub export fn BuildMessage__toJSON(this: *BuildMessage, globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) jsc.JSValue {
+        return this.toJSON(globalThis, callframe) catch globalThis.throwOutOfMemoryValue();
+    }
+
+    pub export fn BuildMessage__toPrimitive(this: *BuildMessage, globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) jsc.JSValue {
+        return this.toPrimitive(globalThis, callframe) catch jsc.JSValue.jsNull();
+    }
+
+    pub export fn BuildMessage__finalize(this: *BuildMessage) void {
+        this.finalize();
     }
 };
 
