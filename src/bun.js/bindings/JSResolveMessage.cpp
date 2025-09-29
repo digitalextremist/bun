@@ -34,7 +34,7 @@ extern "C" void ResolveMessage__finalize(void* resolveMessage);
 extern "C" void* Bun__getResolveMessage(void* taggedPtr);
 
 // Custom getter definitions
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_code, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_code, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -47,7 +47,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_code, (JSGlobalObject* globalObj
     return ResolveMessage__getCode(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_level, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_level, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -60,7 +60,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_level, (JSGlobalObject* globalOb
     return ResolveMessage__getLevel(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_referrer, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_referrer, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -73,7 +73,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_referrer, (JSGlobalObject* globa
     return ResolveMessage__getReferrer(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_specifier, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_specifier, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -86,7 +86,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_specifier, (JSGlobalObject* glob
     return ResolveMessage__getSpecifier(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_importKind, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_importKind, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -99,7 +99,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_importKind, (JSGlobalObject* glo
     return ResolveMessage__getImportKind(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_position, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_position, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -112,7 +112,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_position, (JSGlobalObject* globa
     return ResolveMessage__getPosition(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_line, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_line, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -125,7 +125,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_line, (JSGlobalObject* globalObj
     return ResolveMessage__getLine(resolveMessage, globalObject);
 }
 
-JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_column, (JSGlobalObject* globalObject, JSC::EncodedJSValue thisValue, PropertyName))
+JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_column, (JSGlobalObject * globalObject, JSC::EncodedJSValue thisValue, PropertyName))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(JSValue::decode(thisValue));
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -139,7 +139,7 @@ JSC_DEFINE_CUSTOM_GETTER(jsResolveMessageGetter_column, (JSGlobalObject* globalO
 }
 
 // Function implementations
-JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toString, (JSGlobalObject* globalObject, CallFrame* callFrame))
+JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toString, (JSGlobalObject * globalObject, CallFrame* callFrame))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(callFrame->thisValue());
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -152,7 +152,7 @@ JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toString, (JSGlobalObject* glo
     return ResolveMessage__toString(resolveMessage, globalObject, callFrame);
 }
 
-JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toJSON, (JSGlobalObject* globalObject, CallFrame* callFrame))
+JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toJSON, (JSGlobalObject * globalObject, CallFrame* callFrame))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(callFrame->thisValue());
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -165,7 +165,7 @@ JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toJSON, (JSGlobalObject* globa
     return ResolveMessage__toJSON(resolveMessage, globalObject, callFrame);
 }
 
-JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toPrimitive, (JSGlobalObject* globalObject, CallFrame* callFrame))
+JSC_DEFINE_HOST_FUNCTION(jsResolveMessageFunction_toPrimitive, (JSGlobalObject * globalObject, CallFrame* callFrame))
 {
     auto* errorInstance = JSC::jsDynamicCast<JSC::ErrorInstance*>(callFrame->thisValue());
     if (!errorInstance || !errorInstance->bunErrorData())
@@ -256,8 +256,7 @@ JSC::Structure* createResolveMessageStructure(JSC::VM& vm, JSC::JSGlobalObject* 
     ResolveMessagePrototype* prototype = ResolveMessagePrototype::create(
         vm,
         globalObject,
-        ResolveMessagePrototype::createStructure(vm, globalObject)
-    );
+        ResolveMessagePrototype::createStructure(vm, globalObject));
 
     return JSC::ErrorInstance::createStructure(vm, globalObject, prototype);
 }

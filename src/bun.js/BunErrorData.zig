@@ -1,10 +1,3 @@
-const bun = @import("bun");
-const std = @import("std");
-const TaggedPointerUnion = bun.TaggedPointerUnion;
-
-const BuildMessage = @import("./BuildMessage.zig").BuildMessage;
-const ResolveMessage = @import("./ResolveMessage.zig").ResolveMessage;
-
 /// TaggedPointerUnion for different error data types that can be attached to ErrorInstance
 pub const BunErrorData = TaggedPointerUnion(.{
     BuildMessage,
@@ -74,3 +67,9 @@ pub export fn Bun__errorInstance__finalize(ptr: ?*anyopaque) void {
     // Free the allocated BunErrorData wrapper
     bun.default_allocator.destroy(data);
 }
+
+const BuildMessage = @import("./BuildMessage.zig").BuildMessage;
+const ResolveMessage = @import("./ResolveMessage.zig").ResolveMessage;
+
+const bun = @import("bun");
+const TaggedPointerUnion = bun.TaggedPointerUnion;

@@ -12,5 +12,5 @@ JSC::Structure* createResolveMessageStructure(JSC::VM& vm, JSC::JSGlobalObject* 
 
 // These are called from Zig
 extern "C" {
-    JSC::EncodedJSValue ResolveMessage__toJS(void* resolveMessage, JSC::JSGlobalObject* globalObject);
+JSC::EncodedJSValue ResolveMessage__toJS(void* resolveMessage, JSC::JSGlobalObject* globalObject);
 }

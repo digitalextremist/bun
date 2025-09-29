@@ -12,5 +12,5 @@ JSC::Structure* createBuildMessageStructure(JSC::VM& vm, JSC::JSGlobalObject* gl
 
 // These are called from Zig
 extern "C" {
-    JSC::EncodedJSValue BuildMessage__toJS(void* buildMessage, JSC::JSGlobalObject* globalObject);
+JSC::EncodedJSValue BuildMessage__toJS(void* buildMessage, JSC::JSGlobalObject* globalObject);
 }
