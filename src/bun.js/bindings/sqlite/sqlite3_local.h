@@ -147,12 +147,12 @@ extern "C" {
 ** [sqlite3_libversion_number()], [sqlite3_sourceid()],
 ** [sqlite_version()] and [sqlite_source_id()].
 */
-#define SQLITE_VERSION        "3.51.0"
-#define SQLITE_VERSION_NUMBER 3051000
-#define SQLITE_SOURCE_ID      "2025-11-04 19:38:17 fb2c931ae597f8d00a37574ff67aeed3eced4e5547f9120744a-experimental"
-#define SQLITE_SCM_BRANCH     "unknown"
-#define SQLITE_SCM_TAGS       "unknown"
-#define SQLITE_SCM_DATETIME   "2025-11-04T19:38:17.314Z"
+#define SQLITE_VERSION        "3.51.3"
+#define SQLITE_VERSION_NUMBER 3051003
+#define SQLITE_SOURCE_ID      "2026-03-13 10:38:09 737ae4a34738ffa0c3ff7f9bb18df914dd1cad163f28fd6b6e114a344fe6d618"
+#define SQLITE_SCM_BRANCH     "branch-3.51"
+#define SQLITE_SCM_TAGS       "release version-3.51.3"
+#define SQLITE_SCM_DATETIME   "2026-03-13T10:38:09.694Z"
 
 /*
 ** CAPI3REF: Run-Time Library Version Numbers
@@ -10427,7 +10427,7 @@ SQLITE_API int sqlite3_vtab_in(sqlite3_index_info*, int iCons, int bHandle);
 ** &nbsp;  ){
 ** &nbsp;    // do something with pVal
 ** &nbsp;  }
-** &nbsp;  if( rc!=SQLITE_OK ){
+** &nbsp;  if( rc!=SQLITE_DONE ){
 ** &nbsp;    // an error has occurred
 ** &nbsp;  }
 ** </pre></blockquote>)^
